@@ -1,6 +1,5 @@
 mod config;
 mod model;
-mod iiif;
 
 use std::{net::SocketAddr, sync::Arc};
 
