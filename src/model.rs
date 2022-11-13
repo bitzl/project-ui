@@ -27,6 +27,11 @@ impl Project {
             Err(e) => Err(Box::new(e)),
         }
     }
+    pub fn save(&self, path: &Path) -> Result<(), Box<dyn Error>> {
+        let content = serde_yaml::to_string(&self)?;
+        std::fs::write(path, content)?;
+        Ok(())
+    }
 }
 
 pub struct Projects {
@@ -64,6 +69,12 @@ impl Projects {
     pub fn list(&self) -> Vec<&Project> {
         self.data.values().into_iter().collect()
     }
+    pub fn save(&mut self, project: &Project) -> Result<(), Box<dyn Error>> {
+        let path = Path::new(&self.data_path).join(&project.id);
+        project.save(&path)?;
+        self.load()?;
+        Ok(())
+    }
 }
 
 
@@ -85,8 +96,21 @@ impl AppState {
         let lock = self.projects.lock().unwrap();
         lock.list().into_iter().map(|p| p.clone()).collect()
     }
-    pub fn update(&self) {
+    pub fn update(&self) -> Result<(), Box<dyn Error>> {
         let mut lock = self.projects.lock().unwrap();
-        lock.load().unwrap();
+        lock.load()?;
+        Ok(())
+    }
+    pub fn save(&self, project: Project) -> Result<(), Box<dyn Error>> {
+        let mut lock = self.projects.lock().unwrap();
+        lock.save(&project)?;
+        Ok(())
+    }
+    pub fn add_items(&self, project_id: &str, items: Vec<Item>) -> Result<(), Box<dyn Error>> {
+        let mut lock = self.projects.lock().unwrap();
+        let mut project = lock.get(project_id).unwrap().clone();
+        project.items.extend(items);
+        lock.save(&project)?;
+        Ok(())
     }
 }

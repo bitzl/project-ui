@@ -3,7 +3,7 @@ mod model;
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
-    extract::Path,
+    extract::{self, Path},
     http::{header::CONTENT_TYPE, StatusCode},
     response::IntoResponse,
     routing::{get, post},
@@ -11,6 +11,7 @@ use axum::{
 };
 use axum_template::{engine::Engine, Key, RenderHtml};
 use minijinja::{context, Environment};
+use model::{Item, Project};
 
 use crate::model::AppState;
 
@@ -40,6 +41,27 @@ async fn project(
     }
 }
 
+async fn write_project(
+    Extension(state): Extension<Arc<AppState>>,
+    payload: extract::Json<Project>,
+) -> StatusCode {
+    match state.save(payload.0) {
+        Ok(_) => StatusCode::OK,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
+async fn add_items(
+    Extension(state): Extension<Arc<AppState>>,
+    payload: extract::Json<Vec<Item>>,
+    Path(project_id): Path<String>,
+) -> StatusCode {
+    match state.add_items(&project_id, payload.0) {
+        Ok(_) => StatusCode::OK,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
 async fn viewer(
     Key(key): Key,
     engine: AppEngine,
@@ -53,15 +75,18 @@ async fn viewer(
     RenderHtml(key, engine, viewer_context)
 }
 
-async fn update(Extension(state): Extension<Arc<AppState>>) {
-    state.update()
+async fn update(Extension(state): Extension<Arc<AppState>>)  -> Result<impl IntoResponse, StatusCode> {
+    match state.update() {
+        Ok(_) => Ok(StatusCode::OK),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
 async fn get_css(Path(path): Path<String>) -> Result<impl IntoResponse, StatusCode> {
     // return webfonts
     if path == "/files/ibm-plex-mono-latin-400-normal.woff2" {
         let data = include_bytes!("../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-ext-400-normal.woff2");
-        return Ok(([(CONTENT_TYPE, "application/woff2")],data.to_vec()).into_response());
+        return Ok(([(CONTENT_TYPE, "application/woff2")], data.to_vec()).into_response());
     }
     // return css
     let content = match path.as_str() {
@@ -98,7 +123,9 @@ async fn main() {
         .route("/", get(index))
         .route("/update", post(update))
         .route("/:project_id", get(project))
+        .route("/:project_id", post(write_project))
         .route("/:project_id/:item", get(viewer))
+        .route("/:project_id/add", post(add_items))
         .route("/css/*path", get(get_css))
         .route("/js/*path", get(get_js))
         .layer(Engine::new(jinja))
