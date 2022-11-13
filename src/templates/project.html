@@ -4,8 +4,8 @@
     <div class="grid gap-1 2xl:grid-cols-6 xl:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 bg-neutral-900">
       {% for item in project.items %}
       <figure class="relative max-w-sm cursor-pointer ml-1 mt-1">
-        <a href="http://lab.bitzl.io/{{ project.id }}/item.manifest_id }}">
-          <img class="" src="http://lab.bitzl.io/iiif/2/{{ item.manifest_id }}-03.jp2/full/512,/0/default.jpg" alt="{{ item.manifest_id }}">
+        <a href="{{ urls.site_base }}/{{ project.id }}/item.manifest_id }}">
+          <img class="" src="{{ urls.iiif_base }}/{{ item.manifest_id }}-03.jp2/full/512,/0/default.jpg" alt="{{ item.manifest_id }}">
         </a>
         <figcaption class="absolute text-center w-full bottom-0 px-4 text-lg text-white backdrop-blur-xl backdrop-brightness-50">
           <p>{{ item.manifest_id }}</p>

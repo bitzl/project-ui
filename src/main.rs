@@ -1,4 +1,6 @@
+mod config;
 mod model;
+mod iiif;
 
 use std::{net::SocketAddr, sync::Arc};
 
@@ -25,6 +27,7 @@ async fn index(
     let projects = state.list();
     let context = context!(
        projects => projects,
+       urls => state.urls
     );
     RenderHtml(key, engine, context)
 }
@@ -49,7 +52,7 @@ async fn write_project(
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
-}
+}   
 
 async fn add_items(
     Extension(state): Extension<Arc<AppState>>,
@@ -107,6 +110,7 @@ async fn get_js(Path(path): Path<String>) -> Result<String, StatusCode> {
 
 #[tokio::main]
 async fn main() {
+    let config = config::Config::load("config.yaml").unwrap();
     let mut jinja = Environment::new();
     jinja
         .add_template("base.html", include_str!("templates/base.html"))
@@ -118,7 +122,7 @@ async fn main() {
         .add_template("/:project_id", include_str!("templates/project.html"))
         .unwrap();
 
-    let shared_state = Arc::new(AppState::new("projects").unwrap());
+    let shared_state = Arc::new(AppState::new(config).unwrap());
     let app = Router::new()
         .route("/", get(index))
         .route("/update", post(update))

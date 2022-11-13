@@ -2,6 +2,8 @@ use std::{path::Path, collections::HashMap, sync::Mutex, error::Error};
 
 use serde::{Deserialize, Serialize};
 
+use crate::config::{Config, URLs};
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Project {
     pub id: String,
@@ -80,12 +82,14 @@ impl Projects {
 
 pub struct AppState {
     pub projects: Mutex<Projects>,
+    pub urls: URLs,
 }
 
 impl AppState {
-    pub fn new(data_path: &str) -> Result<AppState, Box<dyn Error>> {
+    pub fn new(config: Config) -> Result<AppState, Box<dyn Error>> {
         Ok(AppState {
-            projects: Mutex::new(Projects::new(data_path)?),
+            projects: Mutex::new(Projects::new(&config.data)?),
+            urls: config.urls
         })
     }
     pub fn get(&self, project_id: &str) -> Option<Project> {
