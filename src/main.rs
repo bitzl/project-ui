@@ -1,7 +1,7 @@
 mod config;
 mod model;
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc, str::FromStr};
 
 use axum::{
     extract::{self, Path},
@@ -51,7 +51,7 @@ async fn write_project(
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
-}   
+}
 
 async fn add_items(
     Extension(state): Extension<Arc<AppState>>,
@@ -77,7 +77,9 @@ async fn viewer(
     RenderHtml(key, engine, viewer_context)
 }
 
-async fn update(Extension(state): Extension<Arc<AppState>>)  -> Result<impl IntoResponse, StatusCode> {
+async fn update(
+    Extension(state): Extension<Arc<AppState>>,
+) -> Result<impl IntoResponse, StatusCode> {
     match state.update() {
         Ok(_) => Ok(StatusCode::OK),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
@@ -109,7 +111,17 @@ async fn get_js(Path(path): Path<String>) -> Result<String, StatusCode> {
 
 #[tokio::main]
 async fn main() {
-    let config = config::Config::load("config.yaml").unwrap();
+    let config_path = std::path::PathBuf::from_str(&std::env::args().nth(1).unwrap_or("config.yml".to_string())).unwrap();
+    let config = if config_path.exists() {
+        config::Config::load("config.yaml").expect("Please provide a config.yaml file")
+    } else {
+        config::Config::default()
+    };
+
+    println!("Reading project infos from {}", &config.data);
+    println!("Base URL: {}", &config.urls.base_url);
+    println!("IIIF: {}/{}", &config.urls.base_url, &config.urls.iiif_base);
+
     let mut jinja = Environment::new();
     jinja
         .add_template("base.html", include_str!("templates/base.html"))
@@ -133,6 +145,11 @@ async fn main() {
         .route("/js/*path", get(get_js))
         .layer(Engine::new(jinja))
         .layer(Extension(shared_state));
+
+    println!("");
+    println!("Listening on http://127.0.0.1:3000");
+    println!("");
+    println!("Press Ctrl+C to stop");
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     axum::Server::bind(&addr)
