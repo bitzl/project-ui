@@ -133,7 +133,7 @@ async fn main() {
         .add_template("/:project_id", include_str!("templates/project.html"))
         .unwrap();
 
-    let shared_state = Arc::new(AppState::new(config).unwrap());
+    let shared_state = Arc::new(AppState::new(config.clone()).unwrap());
     let app = Router::new()
         .route("/", get(index))
         .route("/update", post(update))
@@ -151,7 +151,7 @@ async fn main() {
     println!("");
     println!("Press Ctrl+C to stop");
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr: SocketAddr = config.listen.parse().expect(&format!("Could not parse listen address: {}", &config.listen));
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

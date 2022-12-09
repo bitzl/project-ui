@@ -2,4 +2,4 @@ urls:
   base: http://www.example.com
   iiif_base: /iiif/2
 projects_path: ./projects
-
+listen: 127.0.0.1:3000

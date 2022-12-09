@@ -15,6 +15,8 @@ pub struct Config {
     pub urls: URLs,
     #[serde(default = "projects_default")]
     pub projects_path: String,
+    #[serde(default = "listen_default")]
+    pub listen: String,
 }
 
 impl Config {
@@ -34,6 +36,7 @@ impl Default for Config {
                 iiif_base: iiif_base_default(),
             },
             projects_path: projects_default(),
+            listen: listen_default(),
         }
     }
 }
@@ -48,4 +51,8 @@ fn iiif_base_default() -> String {
 
 fn projects_default() -> String {
     "./projects".to_string()
+}
+
+fn listen_default() -> String {
+    "127.0.0.1:3000".to_string()
 }
