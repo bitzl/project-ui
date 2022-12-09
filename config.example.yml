@@ -1,5 +1,5 @@
 urls:
   base: http://www.example.com
   iiif_base: /iiif/2
-data_path: ./projects
+projects_path: ./projects
 

@@ -14,7 +14,7 @@ pub struct URLs {
 pub struct Config {
     pub urls: URLs,
     #[serde(default = "projects_default")]
-    pub data: String,
+    pub projects_path: String,
 }
 
 impl Config {
@@ -33,7 +33,7 @@ impl Default for Config {
                 base_url: base_url_default(),
                 iiif_base: iiif_base_default(),
             },
-            data: projects_default(),
+            projects_path: projects_default(),
         }
     }
 }

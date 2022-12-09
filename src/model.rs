@@ -90,7 +90,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(config: Config) -> Result<AppState, Box<dyn Error>> {
         Ok(AppState {
-            projects: Mutex::new(Projects::new(&config.data)?),
+            projects: Mutex::new(Projects::new(&config.projects_path)?),
             urls: config.urls,
         })
     }

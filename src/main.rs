@@ -118,7 +118,7 @@ async fn main() {
         config::Config::default()
     };
 
-    println!("Reading project infos from {}", &config.data);
+    println!("Reading project infos from {}", &config.projects_path);
     println!("Base URL: {}", &config.urls.base_url);
     println!("IIIF: {}/{}", &config.urls.base_url, &config.urls.iiif_base);
 
