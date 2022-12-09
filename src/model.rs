@@ -1,4 +1,4 @@
-use std::{path::Path, collections::HashMap, sync::Mutex, error::Error};
+use std::{collections::HashMap, error::Error, path::Path, sync::Mutex};
 
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +25,7 @@ impl Project {
             Ok(content) => {
                 let project: Project = serde_yaml::from_str(&content)?;
                 Ok(project)
-            },
+            }
             Err(e) => Err(Box::new(e)),
         }
     }
@@ -38,21 +38,24 @@ impl Project {
 
 pub struct Projects {
     data: HashMap<String, Project>,
-    data_path: String,
+    projects_path: String,
 }
 
 impl Projects {
-    pub fn new(data_path: &str) -> Result<Projects, Box<dyn Error>> {
+    pub fn new(projects_path: &str) -> Result<Projects, Box<dyn Error>> {
         let mut projects = Projects {
             data: HashMap::new(),
-            data_path: data_path.to_string(),
+            projects_path: projects_path.to_string(),
         };
         projects.load()?;
         Ok(projects)
     }
     pub fn load(&mut self) -> Result<(), Box<dyn Error>> {
         let mut data = HashMap::new();
-        let paths = std::fs::read_dir(&self.data_path).unwrap();
+        let paths = std::fs::read_dir(&self.projects_path).expect(&format!(
+            "Failed to read projects directory: {}",
+            self.projects_path
+        ));
         for path in paths {
             let path = path.unwrap().path();
             if !path.is_file() {
@@ -72,13 +75,12 @@ impl Projects {
         self.data.values().into_iter().collect()
     }
     pub fn save(&mut self, project: &Project) -> Result<(), Box<dyn Error>> {
-        let path = Path::new(&self.data_path).join(&project.id);
+        let path = Path::new(&self.projects_path).join(&project.id);
         project.save(&path)?;
         self.load()?;
         Ok(())
     }
 }
-
 
 pub struct AppState {
     pub projects: Mutex<Projects>,
@@ -89,7 +91,7 @@ impl AppState {
     pub fn new(config: Config) -> Result<AppState, Box<dyn Error>> {
         Ok(AppState {
             projects: Mutex::new(Projects::new(&config.data)?),
-            urls: config.urls
+            urls: config.urls,
         })
     }
     pub fn get(&self, project_id: &str) -> Option<Project> {
