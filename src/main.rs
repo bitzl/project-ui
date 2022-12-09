@@ -1,7 +1,7 @@
 mod config;
 mod model;
 
-use std::{net::SocketAddr, sync::Arc, str::FromStr};
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
     extract::{self, Path},
@@ -111,9 +111,9 @@ async fn get_js(Path(path): Path<String>) -> Result<String, StatusCode> {
 
 #[tokio::main]
 async fn main() {
-    let config_path = std::path::PathBuf::from_str(&std::env::args().nth(1).unwrap_or("config.yml".to_string())).unwrap();
-    let config = if config_path.exists() {
-        config::Config::load("config.yaml").expect("Please provide a config.yaml file")
+    let config = if std::env::args().nth(1).is_some() {
+        let config_name = std::env::args().nth(1).unwrap();
+        config::Config::load(&config_name).expect(&format!("Could not load config {}", config_name))
     } else {
         config::Config::default()
     };
